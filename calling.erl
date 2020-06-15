@@ -1,16 +1,17 @@
 -module(calling).
--import(lists,[foreach/2,nth/2]).
--export([startnetwork/1]).
+-export([startnetwork/2]).
 -export([sendmessage/2]).
 -import(exchange,[masterstatus/1]).
+-import(lists,[foreach/2,nth/2]).
 
-startnetwork(Callslist)->
+
+startnetwork(Callslist,NoOfCallers)->
   Sender=nth(1,Callslist),
   Recievers=nth(2,Callslist),
   foreach(fun(X) -> REQMsgInfo=[whereis(X),X,length(Recievers)*2000],
 					whereis(Sender) ! {requestmessage,REQMsgInfo}
 					end, Recievers),
-  TimoutTime=4000,
+  TimoutTime=NoOfCallers*4000,
   sendmessage(Sender,TimoutTime).
 
 sendmessage(Sender,TimoutTime)->
@@ -28,15 +29,8 @@ sendmessage(Sender,TimoutTime)->
 	{replymessege,Rlist}->
 		RecieverName=nth(2,Rlist),
 		Timout=nth(4,Rlist),
-		TimeDis1=nth(3,Rlist),
-		Yup=[nth(1,Rlist),RecieverName,TimeDis1,Timout],
+		Yup=[nth(1,Rlist),RecieverName,nth(3,Rlist),Timout],
 		whereis(masterID)!{mastereply,Yup},
 		sendmessage(Sender,Timout)
 	after TimoutTime-> io:fwrite("Process ~p has received no calls for ~w seconds,ending... ~n",[Sender,TimoutTime/1000])
  end.
-
-	
-	
-
-
-
